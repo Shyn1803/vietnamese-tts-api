@@ -1,0 +1,31 @@
+services:
+  tts-api:
+    build: .
+    container_name: vietnamese-tts-api
+    restart: unless-stopped
+    ports:
+      - "${TTS_PORT:-8000}:8000"
+    environment:
+      TTS_API_KEY: ${TTS_API_KEY}
+      TTS_DEFAULT_VOICE: ${TTS_DEFAULT_VOICE:-Ngọc Lan}
+      TTS_MAX_TEXT_LENGTH: ${TTS_MAX_TEXT_LENGTH:-5000}
+      HF_HOME: /models/huggingface
+      NVIDIA_VISIBLE_DEVICES: ${NVIDIA_VISIBLE_DEVICES:-all}
+    volumes:
+      - hf-cache:/models/huggingface
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 180s
+
+volumes:
+  hf-cache:
